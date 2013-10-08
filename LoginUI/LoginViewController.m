@@ -58,7 +58,8 @@
                                            if (logged)
                                            {
                                                [loginWindow dismiss];
-                                               loginWindow.endLoginBlock(nil);
+                                               if (loginWindow.endLoginBlock)
+                                                   loginWindow.endLoginBlock(nil);
                                            }
                                            else
                                                [self.navigationItem setRightBarButtonItem:[[UIBarButtonItem alloc] initWithTitle:NSLocalizedString(@"Register", @"")
