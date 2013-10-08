@@ -14,10 +14,6 @@
 
 #import "MBProgressHUD.h"
 
-@interface LoginViewController ()
-
-@end
-
 @implementation LoginViewController
 {
     __weak LoginWindow *loginWindow;
@@ -84,7 +80,6 @@
 - (void)viewDidLoad
 {
     [super viewDidLoad];
-	// Do any additional setup after loading the view.
     
     self.navigationItem.leftBarButtonItem = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemCancel
                                                                                           target:self

@@ -11,10 +11,6 @@
 
 #import "UIViewController+Helpers.h"
 
-@interface LoginWindow ()
-
-@end
-
 @implementation LoginWindow
 {
     id context;

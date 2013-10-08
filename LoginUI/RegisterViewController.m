@@ -13,10 +13,6 @@
 
 #import "MBProgressHUD.h"
 
-@interface RegisterViewController ()
-
-@end
-
 @implementation RegisterViewController
 {
     LoginWindow *loginWindow;
