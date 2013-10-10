@@ -136,9 +136,9 @@
                                       
                                       if (registered)
                                       {
-                                          [loginWindow dismiss];
                                           if (loginWindow.endLoginBlock)
                                               loginWindow.endLoginBlock(nil);
+                                          [loginWindow dismiss];
                                       }
                                       else
                                           [self.navigationItem setRightBarButtonItem:[[UIBarButtonItem alloc] initWithTitle:NSLocalizedString(@"Register", @"")
