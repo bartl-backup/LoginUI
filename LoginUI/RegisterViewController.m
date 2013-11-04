@@ -20,6 +20,7 @@
     TDTextFieldElement *passw1;
     TDTextFieldElement *passw2;
     TDTextFieldElement *login;
+    TDTextFieldElement *nickname;
 }
 
 -(id)initWithLoginWindow:(LoginWindow*)lWindow
@@ -29,8 +30,12 @@
     if (self)
     {
         TDSection *loginSection = [TDSection sectionWithTitle:@""];
+        nickname = [TDTextFieldElement textFieldElementWithPlaceholder:NSLocalizedString(@"Nickname", @"")
+                                                              andValue:@""
+                                                                andKey:@"nickname"];
         login = [TDTextFieldElement textFieldElementWithPlaceholder:NSLocalizedString(@"Email", @"")
                                                            andValue:@"" andKey:@"login"];
+        [loginSection addElement:nickname];
         [loginSection addElement:login];
         [root addSection:loginSection];
         
@@ -81,6 +86,19 @@
 
 - (void)registerClick
 {
+    if (nickname.value.length == 0)
+    {
+        [[[UIAlertView alloc] initWithTitle:NSLocalizedString(@"Enter nickname", @"")
+                                    message:nil
+                                   delegate:nil
+                          cancelButtonTitle:NSLocalizedString(@"Ok", @"")
+                          otherButtonTitles:nil] show];
+        TDTextFieldCell *cell;
+        cell = (TDTextFieldCell*)[self.tableView cellForRowAtIndexPath:[NSIndexPath indexPathForRow:0 inSection:0]];
+        [cell setInputFocus];
+        return;
+    }
+    
     if (login.value.length == 0)
     {
         [[[UIAlertView alloc] initWithTitle:NSLocalizedString(@"Enter email", @"")
@@ -89,7 +107,7 @@
                           cancelButtonTitle:NSLocalizedString(@"Ok", @"")
                           otherButtonTitles:nil] show];
         TDTextFieldCell *cell;
-        cell = (TDTextFieldCell*)[self.tableView cellForRowAtIndexPath:[NSIndexPath indexPathForRow:0 inSection:0]];
+        cell = (TDTextFieldCell*)[self.tableView cellForRowAtIndexPath:[NSIndexPath indexPathForRow:1 inSection:0]];
         [cell setInputFocus];
         return;
     }
