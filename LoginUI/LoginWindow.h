@@ -15,6 +15,8 @@
 @property (nonatomic,copy) void (^cancelLoginBlock)(void);
 @property (nonatomic,copy) void (^cancelRegisterBlock)(void);
 
+@property (nonatomic,copy) void (^forgotPassword)(NSString *email);
+
 @property (nonatomic,copy) void (^endLoginBlock)(NSError*);
 
 -(void)show;
