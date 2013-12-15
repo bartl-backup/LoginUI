@@ -9,7 +9,10 @@
 #import "LoginViewController.h"
 #import "RegisterViewController.h"
 
+#import "Authorizator.h"
+
 #import "BlockAlertView.h"
+#import "ErrorAlertView.h"
 
 #import "LoginWindow.h"
 #import "TDTextFieldCell.h"
@@ -18,7 +21,12 @@
 
 @implementation LoginViewController
 {
-    __weak LoginWindow *loginWindow;
+    __weak LoginWindow *_loginWindow;
+}
+
+-(LoginWindow*)loginWindow
+{
+    return _loginWindow;
 }
 
 -(id)initWithLoginWindow:(LoginWindow*)lWindow
@@ -26,88 +34,152 @@
     TDRoot *root = [[TDRoot alloc] initWithTitle:NSLocalizedString(@"Login",@"")];
     self = [super initWithRoot:root tableViewStyle:UITableViewStyleGrouped];
     if (self) {
-        TDSection *userCredentials = [TDSection sectionWithTitle:@""];
-        
-        [userCredentials addElement:[TDTextFieldElement textFieldElementWithPlaceholder:NSLocalizedString(@"Email", @"")
-                                                                               andValue:@""
-                                                                                 andKey:@"login"]];
-        TDTextFieldElement *passwordElement = [TDTextFieldElement textFieldElementWithPlaceholder:NSLocalizedString(@"Password",@"")
-                                                                                         andValue:@""
-                                                                                           andKey:@"password"];
-        passwordElement.isSecure = YES;
-        [userCredentials addElement:passwordElement];
-        [root addSection:userCredentials];
-        
-        
-        TDSection *buttonsSection = [TDSection sectionWithTitle:@""];
-        
-        __weak LoginViewController* pself = self;
-        
-        TDButtonElement *loginButton = [TDButtonElement buttonElementWithTitle:NSLocalizedString(@"Login", @"")];
-        loginButton.didSelectHandler = ^(TDElement *element){
-            [MBProgressHUD showHUDAddedTo:pself.view animated:NO];
-            [pself.view endEditing:YES];
-            pself.tableView.scrollEnabled = NO;
-            
-            [pself.navigationItem setRightBarButtonItem:nil animated:YES];
-            
-            if (!loginWindow.loginBlock) return;
-            
-            dispatch_async(dispatch_get_main_queue(), ^{
-                loginWindow.loginBlock([pself.root elementsValues],
-                                       ^(BOOL logged)
-                                       {
-                                           pself.tableView.scrollEnabled = YES;
-                                           [MBProgressHUD hideAllHUDsForView:pself.view animated:YES];
-                                           
-                                           if (logged)
-                                           {
-                                               if (loginWindow.endLoginBlock)
-                                                   loginWindow.endLoginBlock(nil);
-                                               [loginWindow dismiss];
-                                           }
-                                           else
-                                               [pself.navigationItem setRightBarButtonItem:[[UIBarButtonItem alloc] initWithTitle:NSLocalizedString(@"Register", @"")
-                                                                                                                           style:UIBarButtonItemStyleDone
-                                                                                                                          target:pself
-                                                                                                                          action:@selector(registerClick)]
-                                                                                 animated:YES];
-                                       });
-            });
-        };
-        [buttonsSection addElement:loginButton];
-        
-        TDButtonElement *forgotPassword = [TDButtonElement buttonElementWithTitle:NSLocalizedString(@"Forgot password", @"")];
-        forgotPassword.didSelectHandler = ^(TDElement *element)
-        {
-            BlockAlertView *alert = [[BlockAlertView alloc] initWithTitle:NSLocalizedString(@"Enter email", @"")
-                                                             message:nil];
-            alert.alertView.alertViewStyle = UIAlertViewStylePlainTextInput;
-            [alert addButton:NSLocalizedString(@"Cancel", @"") withBlock:nil];
-            [alert addButton:NSLocalizedString(@"Ok", @"") withBlock:^(BlockAlertView *alert) {
-                NSString *email = [alert.alertView textFieldAtIndex:0].text;
-                if (loginWindow.forgotPassword)
-                    loginWindow.forgotPassword(email);
-                double delayInSeconds = 0.1;
-                dispatch_time_t popTime = dispatch_time(DISPATCH_TIME_NOW, (int64_t)(delayInSeconds * NSEC_PER_SEC));
-                dispatch_after(popTime, dispatch_get_main_queue(), ^(void){
-                    [[[UIAlertView alloc] initWithTitle:nil
-                                               message:NSLocalizedString(@"Your password will be send to specified email", @"")
-                                              delegate:nil
-                                     cancelButtonTitle:NSLocalizedString(@"Ok", @"")
-                                      otherButtonTitles:nil] show];
-                });
-            }];
-            alert.alertView.cancelButtonIndex = 0;
-            [alert show];
-        };
-        [buttonsSection addElement:forgotPassword];
-        
-        [root addSection:buttonsSection];
-        
-        loginWindow = lWindow;
+        _loginWindow = lWindow;
     }
     return self;
+}
+
+-(void)addFields:(TDRoot*)root
+{
+    TDSection *userCredentials = [TDSection sectionWithTitle:@""];
+    
+    [userCredentials addElement:[TDTextFieldElement textFieldElementWithPlaceholder:NSLocalizedString(@"Email", @"")
+                                                                           andValue:@""
+                                                                             andKey:@"login"]];
+    TDTextFieldElement *passwordElement = [TDTextFieldElement textFieldElementWithPlaceholder:NSLocalizedString(@"Password",@"")
+                                                                                     andValue:@""
+                                                                                       andKey:@"password"];
+    passwordElement.isSecure = YES;
+    [userCredentials addElement:passwordElement];
+    [root addSection:userCredentials];
+}
+
+-(void)addButtons:(TDRoot*)root
+{
+    TDSection *buttonsSection = [TDSection sectionWithTitle:@""];
+    
+    __weak typeof(self) pself = self;
+    
+    TDButtonElement *loginButton = [TDButtonElement buttonElementWithTitle:NSLocalizedString(@"Login", @"")];
+    loginButton.didSelectHandler = ^(TDElement *element){
+        MBProgressHUD *hud = [pself showHud];
+        
+        if (!pself.loginWindow.loginBlock) return;
+        
+        dispatch_async(dispatch_get_main_queue(), ^{
+            pself.loginWindow.loginBlock([pself.root elementsValues],
+                                         ^(BOOL logged)
+                                         {
+                                             [pself hideHud:hud];
+                                             
+                                             if (logged)
+                                             {
+                                                 [pself loginComplete];
+                                             }
+                                         });
+        });
+    };
+    [buttonsSection addElement:loginButton];
+    
+    TDButtonElement *forgotPassword = [TDButtonElement buttonElementWithTitle:NSLocalizedString(@"Forgot password", @"")];
+    forgotPassword.didSelectHandler = ^(TDElement *element)
+    {
+        BlockAlertView *alert = [[BlockAlertView alloc] initWithTitle:NSLocalizedString(@"Enter email", @"")
+                                                              message:nil];
+        alert.alertView.alertViewStyle = UIAlertViewStylePlainTextInput;
+        [alert addButton:NSLocalizedString(@"Cancel", @"") withBlock:nil];
+        [alert addButton:NSLocalizedString(@"Ok", @"") withBlock:^(BlockAlertView *alert) {
+            NSString *email = [alert.alertView textFieldAtIndex:0].text;
+            if (pself.loginWindow.forgotPassword)
+                pself.loginWindow.forgotPassword(email);
+            double delayInSeconds = 0.1;
+            dispatch_time_t popTime = dispatch_time(DISPATCH_TIME_NOW, (int64_t)(delayInSeconds * NSEC_PER_SEC));
+            dispatch_after(popTime, dispatch_get_main_queue(), ^(void){
+                [[[UIAlertView alloc] initWithTitle:nil
+                                            message:NSLocalizedString(@"Your password will be send to specified email", @"")
+                                           delegate:nil
+                                  cancelButtonTitle:NSLocalizedString(@"Ok", @"")
+                                  otherButtonTitles:nil] show];
+            });
+        }];
+        alert.alertView.cancelButtonIndex = 0;
+        [alert show];
+    };
+    [buttonsSection addElement:forgotPassword];
+    
+    [root addSection:buttonsSection];
+}
+
+-(void)addAuthorizators:(TDRoot*)root
+{
+    if (self.loginWindow.authorizators.count)
+    {
+        TDSection *loginWithSection = [TDSection sectionWithTitle:NSLocalizedString(@"Login with", @"")];
+        for (Authorizator *authorizator in self.loginWindow.authorizators)
+        {
+            [self addAuthorizator:authorizator to:loginWithSection];
+        }
+        [root addSection:loginWithSection];
+    }
+}
+
+-(void)addAuthorizator:(Authorizator*)authorizator to:(TDSection*)section
+{
+    __weak typeof(self) pself = self;
+    
+    TDImageElement *imageElement = [TDImageElement imageElementWithText:[authorizator title]
+                                                               andValue:nil
+                                                               andImage:[authorizator image]];
+    imageElement.didSelectHandler = ^(TDElement* element)
+    {
+        MBProgressHUD *hud = [pself showHud];
+        [authorizator authorize:^(NSDictionary *userData, NSError *error) {
+            if (!error)
+            {
+                if (pself.loginWindow.authorizeWith)
+                    pself.loginWindow.authorizeWith(userData, ^(BOOL logged){
+                        [pself hideHud:hud];
+                        
+                        if (logged)
+                            [pself loginComplete];
+                    });
+            }
+            else
+            {
+                [ErrorAlertView showError:error];
+                [pself hideHud:hud];
+            }
+        }];
+    };
+    
+    [section addElement:imageElement];
+}
+
+-(MBProgressHUD*)showHud
+{
+    MBProgressHUD *hud = [MBProgressHUD showHUDAddedTo:self.view animated:NO];
+    [self.navigationItem setRightBarButtonItem:nil animated:YES];
+    [self.view endEditing:YES];
+    self.tableView.scrollEnabled = NO;
+    return hud;
+}
+
+-(void)hideHud:(MBProgressHUD*)hud
+{
+    [hud hide:YES];
+    self.tableView.scrollEnabled = YES;
+    [self.navigationItem setRightBarButtonItem:[[UIBarButtonItem alloc] initWithTitle:NSLocalizedString(@"Register", @"")
+                                                                                style:UIBarButtonItemStyleDone
+                                                                               target:self
+                                                                               action:@selector(registerClick)]
+                                      animated:YES];
+}
+
+-(void)loginComplete
+{
+    if (self.loginWindow.endLoginBlock)
+        self.loginWindow.endLoginBlock(nil);
+    [self.loginWindow dismiss];
 }
 
 - (void)viewDidLoad
@@ -121,6 +193,12 @@
                                                                               style:UIBarButtonItemStyleDone
                                                                              target:self
                                                                              action:@selector(registerClick)];
+    
+    [self addFields:self.root];
+    [self addButtons:self.root];
+    [self addAuthorizators:self.root];
+    
+    [self.tableView reloadData];
 }
 
 -(void)viewDidAppear:(BOOL)animated
@@ -153,15 +231,15 @@
 
 -(void)cancelClick
 {
-    if (loginWindow.cancelLoginBlock)
-        loginWindow.cancelLoginBlock();
+    if (self.loginWindow.cancelLoginBlock)
+        self.loginWindow.cancelLoginBlock();
     
-    [loginWindow dismiss];
+    [self.loginWindow dismiss];
 }
 
 -(void)registerClick
 {
-    RegisterViewController *registerViewController = [[RegisterViewController alloc] initWithLoginWindow:loginWindow];
+    RegisterViewController *registerViewController = [[RegisterViewController alloc] initWithLoginWindow:self.loginWindow];
     [self.navigationController pushViewController:registerViewController animated:YES];
 }
 

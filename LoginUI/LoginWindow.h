@@ -17,7 +17,11 @@
 
 @property (nonatomic,copy) void (^forgotPassword)(NSString *email);
 
+@property (nonatomic,copy) void (^authorizeWith)(NSDictionary *userData,void(^)(BOOL logged));
+
 @property (nonatomic,copy) void (^endLoginBlock)(NSError*);
+
+@property (nonatomic,strong) NSArray *authorizators;
 
 -(void)show;
 -(void)dismiss;
