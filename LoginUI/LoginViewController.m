@@ -86,10 +86,10 @@
     {
         BlockAlertView *alert = [[BlockAlertView alloc] initWithTitle:NSLocalizedString(@"Enter email", @"")
                                                               message:nil];
-        alert.alertView.alertViewStyle = UIAlertViewStylePlainTextInput;
+        alert.style = UIAlertViewStylePlainTextInput;
         [alert addButton:NSLocalizedString(@"Cancel", @"") withBlock:nil];
         [alert addButton:NSLocalizedString(@"Ok", @"") withBlock:^(BlockAlertView *alert) {
-            NSString *email = [alert.alertView textFieldAtIndex:0].text;
+            NSString *email = [alert textFieldAtIndex:0].text;
             if (pself.loginWindow.forgotPassword)
                 pself.loginWindow.forgotPassword(email);
             double delayInSeconds = 0.1;
@@ -102,7 +102,7 @@
                                   otherButtonTitles:nil] show];
             });
         }];
-        alert.alertView.cancelButtonIndex = 0;
+        alert.cancelButtonIndex = 0;
         [alert show];
     };
     [buttonsSection addElement:forgotPassword];
