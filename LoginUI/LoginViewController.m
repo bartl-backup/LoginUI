@@ -146,7 +146,7 @@
             }
             else
             {
-                [ErrorAlertView showError:error];
+                [ErrorAlertView showError:error realError:YES];
                 [pself hideHud:hud];
             }
         }];
