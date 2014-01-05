@@ -16,6 +16,7 @@
     id context;
     
     UINavigationController *navController;
+    UIViewController *parentController;
 }
 
 - (id)init
@@ -38,14 +39,15 @@
 -(void)show
 {
     context = self;
-    [[[UIApplication sharedApplication].delegate.window.rootViewController findTopViewController] presentViewController:navController
-                                                                                                               animated:YES
-                                                                                                             completion:nil];
+    parentController = [[UIApplication sharedApplication].delegate.window.rootViewController findTopViewController];
+    [parentController presentViewController:navController
+                                   animated:YES
+                                 completion:nil];
 }
 
 -(void)dismiss
 {
-    [navController dismissViewControllerAnimated:YES
+    [parentController dismissViewControllerAnimated:YES
                              completion:nil];
     
     context = nil;

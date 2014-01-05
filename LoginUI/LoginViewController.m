@@ -179,7 +179,6 @@
 {
     if (self.loginWindow.endLoginBlock)
         self.loginWindow.endLoginBlock(nil);
-    [self.loginWindow dismiss];
 }
 
 - (void)viewDidLoad
@@ -233,8 +232,6 @@
 {
     if (self.loginWindow.cancelLoginBlock)
         self.loginWindow.cancelLoginBlock();
-    
-    [self.loginWindow dismiss];
 }
 
 -(void)registerClick
