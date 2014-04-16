@@ -130,23 +130,29 @@
     TDImageElement *imageElement = [TDImageElement imageElementWithText:[authorizator title]
                                                                andValue:nil
                                                                andImage:[authorizator image]];
+    
     imageElement.didSelectHandler = ^(TDElement* element)
     {
-        MBProgressHUD *hud = [pself showHud];
+         MBProgressHUD *hud = [pself showHud];
+        [pself.view endEditing:YES];
         [authorizator authorize:^(NSDictionary *userData, NSError *error) {
-            if (!error)
+            if (userData)
             {
                 if (pself.loginWindow.authorizeWith)
-                    pself.loginWindow.authorizeWith(userData, ^(BOOL logged){
-                        [pself hideHud:hud];
-                        
+                {
+                    pself.loginWindow.authorizeWith(userData, ^(BOOL logged){                        
                         if (logged)
                             [pself loginComplete];
                     });
+                }
+            }
+            else if (error)
+            {
+                [ErrorAlertView showError:error realError:YES];
+                [pself hideHud:hud];
             }
             else
             {
-                [ErrorAlertView showError:error realError:YES];
                 [pself hideHud:hud];
             }
         }];
