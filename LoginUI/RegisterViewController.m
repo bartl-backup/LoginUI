@@ -138,6 +138,7 @@
         return;
     }
     
+    [self.view endEditing:YES];
     [MBProgressHUD showHUDAddedTo:self.view animated:NO];
     self.tableView.scrollEnabled = NO;
     
