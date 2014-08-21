@@ -47,10 +47,13 @@
 
 -(void)dismiss
 {
-    [parentController dismissViewControllerAnimated:YES
-                             completion:nil];
-    
-    context = nil;
+    [navController.view endEditing:YES];
+    dispatch_async(dispatch_get_main_queue(), ^{
+        [parentController dismissViewControllerAnimated:YES
+                                             completion:nil];
+        
+        context = nil;
+    });
 }
 
 @end
